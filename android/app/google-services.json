@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995665000541",
+    "project_id": "ictu-guide",
+    "storage_bucket": "ictu-guide.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995665000541:android:b4dc074fb3478491cff5b4",
+        "android_client_info": {
+          "package_name": "com.ictu.guide"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-K-S2v1cq86yrj-qaAwVyPp-tge2DO90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
