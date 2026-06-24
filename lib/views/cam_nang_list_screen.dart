@@ -31,35 +31,40 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
       CamNang(
         id: '1',
         tieuDe: 'Hướng dẫn đăng ký tín chỉ',
-        noiDung: 'Hướng dẫn chi tiết các bước đăng ký môn học qua cổng thông tin sinh viên. Bao gồm: cách chọn môn, xác nhận và nộp học phí.',
+        noiDung:
+            'Hướng dẫn chi tiết các bước đăng ký môn học qua cổng thông tin sinh viên. Bao gồm: cách chọn môn, xác nhận và nộp học phí.',
         ngayTao: DateTime.now(),
         luotXem: 1200,
       ),
       CamNang(
         id: '2',
         tieuDe: 'Quy định đào tạo tín chỉ',
-        noiDung: 'Các quy định mới nhất về đào tạo theo hệ thống tín chỉ, áp dụng từ năm học 2025-2026.',
+        noiDung:
+            'Các quy định mới nhất về đào tạo theo hệ thống tín chỉ, áp dụng từ năm học 2025-2026.',
         ngayTao: DateTime.now(),
         luotXem: 856,
       ),
       CamNang(
         id: '3',
         tieuDe: 'Hướng dẫn đóng học phí',
-        noiDung: 'Các phương thức đóng học phí trực tuyến, hướng dẫn thanh toán qua ngân hàng và ví điện tử.',
+        noiDung:
+            'Các phương thức đóng học phí trực tuyến, hướng dẫn thanh toán qua ngân hàng và ví điện tử.',
         ngayTao: DateTime.now(),
         luotXem: 543,
       ),
       CamNang(
         id: '4',
         tieuDe: 'Sơ đồ các phòng ban',
-        noiDung: 'Vị trí và chức năng của các phòng ban trong trường, giúp sinh viên dễ dàng liên hệ khi cần.',
+        noiDung:
+            'Vị trí và chức năng của các phòng ban trong trường, giúp sinh viên dễ dàng liên hệ khi cần.',
         ngayTao: DateTime.now(),
         luotXem: 432,
       ),
       CamNang(
         id: '5',
         tieuDe: 'Thư viện ICTU: Hướng dẫn mượn sách',
-        noiDung: 'Quy trình mượn/trả sách tại thư viện, tra cứu tài liệu trực tuyến.',
+        noiDung:
+            'Quy trình mượn/trả sách tại thư viện, tra cứu tài liệu trực tuyến.',
         ngayTao: DateTime.now(),
         luotXem: 312,
       ),
@@ -120,17 +125,14 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
           // Danh sách bài viết
           _danhSachLoc.isEmpty
               ? const SliverFillRemaining(
-            child: Center(child: Text('Không tìm thấy bài viết')),
-          )
+                  child: Center(child: Text('Không tìm thấy bài viết')),
+                )
               : SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                final baiViet = _danhSachLoc[index];
-                return _buildBaiVietCard(baiViet);
-              },
-              childCount: _danhSachLoc.length,
-            ),
-          ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final baiViet = _danhSachLoc[index];
+                    return _buildBaiVietCard(baiViet);
+                  }, childCount: _danhSachLoc.length),
+                ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
@@ -158,10 +160,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
         titlePadding: const EdgeInsets.only(left: 56, bottom: 12),
         title: const Text(
           'Cẩm nang sinh viên',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         background: Container(
           decoration: BoxDecoration(
@@ -233,7 +232,10 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
@@ -247,14 +249,20 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                     Icon(
                       danhMuc['icon'],
                       size: 18,
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       danhMuc['ten'],
                       style: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textSecondary,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textSecondary,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
@@ -352,18 +360,32 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                               const SizedBox(height: 6),
                               Row(
                                 children: [
-                                  Icon(Icons.access_time, size: 12, color: AppColors.textTertiary),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 12,
+                                    color: AppColors.textTertiary,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _formatDate(baiViet.ngayTao),
-                                    style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textTertiary,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Icon(Icons.visibility, size: 12, color: AppColors.textTertiary),
+                                  Icon(
+                                    Icons.visibility,
+                                    size: 12,
+                                    color: AppColors.textTertiary,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${baiViet.luotXem}',
-                                    style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textTertiary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -391,7 +413,10 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
 
                     // Tag ở dưới cùng
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accent.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(16),
@@ -399,7 +424,11 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.local_offer, size: 10, color: AppColors.accent),
+                          Icon(
+                            Icons.local_offer,
+                            size: 10,
+                            color: AppColors.accent,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Đào tạo',

@@ -14,10 +14,10 @@ class CauHoiService {
         .orderBy('ngayTao', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return CauHoi.fromMap(doc.data(), doc.id);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            return CauHoi.fromMap(doc.data(), doc.id);
+          }).toList();
+        });
   }
 
   /// Lấy chi tiết 1 câu hỏi theo ID
@@ -54,10 +54,10 @@ class CauHoiService {
         .orderBy('ngayTao', descending: false)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return CauTraLoi.fromMap(doc.data(), doc.id);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            return CauTraLoi.fromMap(doc.data(), doc.id);
+          }).toList();
+        });
   }
 
   /// Thêm câu trả lời
