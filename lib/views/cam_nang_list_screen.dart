@@ -4,7 +4,6 @@ import '../models/cam_nang.dart';
 import 'cam_nang_detail_screen.dart';
 import '../services/cam_nang_service.dart';
 
-/// Màn hình danh sách Cẩm nang - Thiết kế cao cấp 2026
 class CamNangListScreen extends StatefulWidget {
   const CamNangListScreen({super.key});
 
@@ -26,27 +25,14 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // Header đẹp
           _buildSliverHeader(),
-
-          // Search bar
           _buildSliverSearchBar(),
-
-          // Danh mục
           _buildSliverDanhMuc(),
-
-          // Kết quả tìm kiếm
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -63,36 +49,57 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
           StreamBuilder<List<CamNang>>(
             stream: _camNangService.layDanhSachCamNang(),
             builder: (context, snapshot) {
+              // 1. Nếu có lỗi, in lỗi ra màn hình và console
               if (snapshot.hasError) {
-                return const SliverToBoxAdapter(
-                  child: Center(child: Text('Lỗi tải dữ liệu')),
+                print('>>> LỖI FIREBASE: ${snapshot.error}'); // Dòng này sẽ in lỗi ra cửa sổ Run
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Lỗi tải dữ liệu:\n${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               }
 
+              // 2. Đang tải dữ liệu
               if (!snapshot.hasData) {
                 return const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
 
+              // 3. Có dữ liệu, bắt đầu lọc
               var danhSach = snapshot.data!;
-
-              // Lọc theo từ khóa tìm kiếm (nếu có)
               if (_tuKhoaTimKiem.isNotEmpty) {
                 danhSach = danhSach.where((baiViet) {
-                  return baiViet.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                  return baiViet.tieuDe
+                      .toLowerCase()
+                      .contains(_tuKhoaTimKiem.toLowerCase());
                 }).toList();
               }
 
+              // 4. Danh sách rỗng
               if (danhSach.isEmpty) {
-                return const SliverToBoxAdapter( // Đổi thành SliverToBoxAdapter
+                return const SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.all(40), // Thêm padding để chữ nằm giữa màn hình đẹp hơn
+                    padding: EdgeInsets.all(40),
                     child: Center(child: Text('Không tìm thấy bài viết')),
                   ),
                 );
               }
 
+              // 5. Hiển thị danh sách
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -104,14 +111,14 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
               );
             },
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
       ),
     );
   }
 
-  /// Header dạng Sliver (cuộn mượt)
+  // Các hàm _buildSliverHeader, _buildSliverSearchBar, _buildSliverDanhMuc, _buildBaiVietCard
+  // giữ nguyên y hệt như file cũ của bạn. (Mình không copy lại để đỡ dài, bạn giữ lại code cũ của bạn ở các hàm này nhé).
   Widget _buildSliverHeader() {
     return SliverAppBar(
       expandedHeight: 100,
@@ -146,7 +153,6 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
     );
   }
 
-  /// Search bar dạng Sliver
   Widget _buildSliverSearchBar() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -182,7 +188,6 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
     );
   }
 
-  /// Danh mục dạng Sliver - cuộn ngang
   Widget _buildSliverDanhMuc() {
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -203,10 +208,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
@@ -220,20 +222,14 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                     Icon(
                       danhMuc['icon'],
                       size: 18,
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                      color: isSelected ? Colors.white : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       danhMuc['ten'],
                       style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.textSecondary,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
@@ -247,7 +243,6 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
     );
   }
 
-  /// Card bài viết đẹp
   Widget _buildBaiVietCard(CamNang baiViet) {
     return GestureDetector(
       onTap: () {
@@ -289,11 +284,9 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hàng trên: ảnh nhỏ + tag
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Ảnh thumbnail
                         Container(
                           width: 70,
                           height: 70,
@@ -305,15 +298,9 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                             ),
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          child: const Icon(
-                            Icons.menu_book,
-                            color: Colors.white,
-                            size: 32,
-                          ),
+                          child: const Icon(Icons.menu_book, color: Colors.white, size: 32),
                         ),
                         const SizedBox(width: 16),
-
-                        // Nội dung chính
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,32 +318,18 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                               const SizedBox(height: 6),
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.access_time,
-                                    size: 12,
-                                    color: AppColors.textTertiary,
-                                  ),
+                                  Icon(Icons.access_time, size: 12, color: AppColors.textTertiary),
                                   const SizedBox(width: 4),
                                   Text(
                                     _formatDate(baiViet.ngayTao),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.textTertiary,
-                                    ),
+                                    style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
                                   ),
                                   const SizedBox(width: 12),
-                                  Icon(
-                                    Icons.visibility,
-                                    size: 12,
-                                    color: AppColors.textTertiary,
-                                  ),
+                                  Icon(Icons.visibility, size: 12, color: AppColors.textTertiary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${baiViet.luotXem}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.textTertiary,
-                                    ),
+                                    style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
                                   ),
                                 ],
                               ),
@@ -365,10 +338,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 12),
-
-                    // Mô tả
                     Text(
                       baiViet.noiDung,
                       style: TextStyle(
@@ -379,15 +349,9 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-
                     const SizedBox(height: 12),
-
-                    // Tag ở dưới cùng
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.accent.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(16),
@@ -395,11 +359,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.local_offer,
-                            size: 10,
-                            color: AppColors.accent,
-                          ),
+                          Icon(Icons.local_offer, size: 10, color: AppColors.accent),
                           const SizedBox(width: 4),
                           Text(
                             'Đào tạo',

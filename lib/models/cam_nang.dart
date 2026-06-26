@@ -1,4 +1,4 @@
-/// Model Cẩm nang - Lưu trữ thông tin bài viết hướng dẫn cho sinh viên
+import 'package:cloud_firestore/cloud_firestore.dart';
 class CamNang {
   /// ID duy nhất của bài viết
   final String id;
@@ -43,14 +43,23 @@ class CamNang {
   );
 
   /// Chuyển đổi từ Map thành CamNang
-  /// TODO: Sửa lại sau khi cài Firebase
   factory CamNang.fromMap(Map<String, dynamic> map, String documentId) {
+    // Xử lý ngayTao: Nếu là Timestamp từ Firebase thì lấy toDate(), còn nếu là String thì parse
+    DateTime ngayTao;
+    if (map['ngayTao'] is Timestamp) {
+      ngayTao = (map['ngayTao'] as Timestamp).toDate();
+    } else if (map['ngayTao'] is String) {
+      ngayTao = DateTime.tryParse(map['ngayTao']) ?? DateTime.now();
+    } else {
+      ngayTao = DateTime.now(); // Fallback an toàn
+    }
+
     return CamNang(
       id: documentId,
       tieuDe: map['tieuDe'] ?? '',
       noiDung: map['noiDung'] ?? '',
       hinhAnh: map['hinhAnh'],
-      ngayTao: DateTime.tryParse(map['ngayTao'] ?? '') ?? DateTime.now(),
+      ngayTao: ngayTao, // Dùng biến ngayTao đã xử lý ở trên
       luotXem: map['luotXem'] ?? 0,
     );
   }
