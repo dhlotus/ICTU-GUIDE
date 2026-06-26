@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../config/app_colors.dart';
-import 'admin_camnang_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'admin_camnang_screen.dart';
 import 'admin_hoi_dap_screen.dart';
 import 'admin_nguoi_dung_screen.dart';
 
@@ -13,34 +12,28 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  // Dữ liệu thống kê (tạm thời dùng mock)
   int _tongNguoiDung = 0;
   int _tongBaiViet = 0;
   int _tongCauHoi = 0;
   bool _dangTai = true;
   int _tabDangChon = 0;
+
   @override
   void initState() {
     super.initState();
     _layDuLieuThongKe();
   }
 
-  // Hàm lấy dữ liệu từ Firestore
   Future<void> _layDuLieuThongKe() async {
     try {
-      // Lấy tổng số người dùng
       final nguoiDung = await FirebaseFirestore.instance
           .collection('nguoi_dung')
           .count()
           .get();
-
-      // Lấy tổng số bài viết
       final baiViet = await FirebaseFirestore.instance
           .collection('cam_nang')
           .count()
           .get();
-
-      // Lấy tổng số câu hỏi
       final cauHoi = await FirebaseFirestore.instance
           .collection('cau_hoi')
           .count()
@@ -53,7 +46,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         _dangTai = false;
       });
     } catch (e) {
-      print('Lỗi lấy dữ liệu: $e');
       setState(() {
         _dangTai = false;
       });
@@ -66,9 +58,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       backgroundColor: const Color(0xFFF8FAFC),
       body: Row(
         children: [
-          // Sidebar (sẽ tách riêng sau)
           _buildSidebar(),
-          // Nội dung chính
           Expanded(
             child: Column(
               children: [
@@ -90,18 +80,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildSidebar() {
     return Container(
       width: 260,
-      color: const Color(0xFF0D47A1),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [const Color(0xFF0F4C81), const Color(0xFF0D3B6B)],
+        ),
+      ),
       child: Column(
         children: [
           const SizedBox(height: 30),
-          // Logo
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.admin_panel_settings, color: Colors.white, size: 28),
+              Icon(Icons.auto_awesome, color: Colors.cyanAccent, size: 28),
               SizedBox(width: 10),
               Text(
-                'Lotus Admin',
+                'Lotus',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -111,7 +106,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ],
           ),
           const SizedBox(height: 30),
-          // Menu
           _buildMenuItem(
             Icons.dashboard,
             'Tổng quan',
@@ -132,7 +126,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
             index: 3,
           ),
           const Spacer(),
-          // Nút đăng xuất ở cuối
           _buildMenuItem(Icons.logout, 'Đăng xuất', false, isLogout: true),
           const SizedBox(height: 20),
         ],
@@ -147,27 +140,38 @@ class _AdminDashboardState extends State<AdminDashboard> {
     bool isLogout = false,
     int index = 0,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: isLogout ? Colors.red : Colors.white70),
-      title: Text(
-        label,
-        style: TextStyle(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
           color: isLogout
               ? Colors.red
-              : (isActive ? Colors.white : Colors.white70),
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              : (isActive ? Colors.white : const Color(0xFF94A3B8)),
         ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isLogout
+                ? Colors.red
+                : (isActive ? Colors.white : const Color(0xFF94A3B8)),
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        onTap: () {
+          if (isLogout) {
+            // TODO: Xử lý đăng xuất
+          } else {
+            setState(() {
+              _tabDangChon = index;
+            });
+          }
+        },
       ),
-      tileColor: isActive ? Colors.white.withOpacity(0.15) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      onTap: () {
-        if (isLogout) {
-        } else {
-          setState(() {
-            _tabDangChon = index;
-          });
-        }
-      },
     );
   }
 
@@ -175,31 +179,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-      color: Colors.white,
+      color: Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
             'Tổng quan',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
           ),
           Row(
             children: [
-              // Tên Admin
               const Text(
                 'Xin chào, Admin',
                 style: TextStyle(color: Color(0xFF64748B)),
               ),
               const SizedBox(width: 16),
-              // Avatar
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D47A1).withOpacity(0.1),
                   shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [const Color(0xFF0F4C81), const Color(0xFF0D3B6B)],
+                  ),
                 ),
-                child: const Icon(Icons.person, color: Color(0xFF0D47A1)),
+                child: const Icon(Icons.person, color: Colors.white, size: 20),
               ),
             ],
           ),
@@ -214,157 +224,597 @@ class _AdminDashboardState extends State<AdminDashboard> {
       case 0:
         return _buildDashboardContent();
       case 1:
-        return _buildCamNangContent();
+        return const AdminCamNangScreen();
       case 2:
-        return _buildHoiDapContent();
+        return const AdminHoiDapScreen();
       case 3:
-        return _buildNguoiDungContent();
+        return const AdminNguoiDungScreen();
       default:
         return _buildDashboardContent();
     }
   }
 
-  Widget _buildCamNangContent() {
-    return const AdminCamNangScreen();
-  }
-
-  Widget _buildHoiDapContent() {
-    return const AdminHoiDapScreen();
-  }
-
-  Widget _buildNguoiDungContent() {
-    return const AdminNguoiDungScreen();
-  }
-
-  // Card thống kê
-  Widget _buildStatCard(String label, int count, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  '$count',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // ===== DASHBOARD CONTENT =====
   Widget _buildDashboardContent() {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 3 Card thống kê
-          Row(
-            children: [
-              _buildStatCard(
-                'Người dùng',
-                _tongNguoiDung,
-                Icons.people,
-                const Color(0xFF0D47A1),
-              ),
-              const SizedBox(width: 20),
-              _buildStatCard(
-                'Bài viết',
-                _tongBaiViet,
-                Icons.book,
-                const Color(0xFF2E7D32),
-              ),
-              const SizedBox(width: 20),
-              _buildStatCard(
-                'Câu hỏi',
-                _tongCauHoi,
-                Icons.question_answer,
-                const Color(0xFFE65100),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-
-          // Hoạt động gần đây
-          const Text(
-            'Hoạt động gần đây',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
+          // Cột trái (60%)
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ListView(
-                children: const [
-                  ListTile(
-                    leading: Icon(Icons.person_add, color: Color(0xFF0D47A1)),
-                    title: Text('15 người dùng mới'),
-                    subtitle: Text('Hôm nay, 14:30'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.help, color: Color(0xFFE65100)),
-                    title: Text('8 câu hỏi mới'),
-                    subtitle: Text('Hôm nay, 10:15'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.edit, color: Color(0xFF2E7D32)),
-                    title: Text('3 bài viết mới'),
-                    subtitle: Text('Hôm qua, 20:45'),
-                  ),
-                ],
-              ),
+            flex: 6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 3 Card thống kê
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Người dùng',
+                        count: _tongNguoiDung,
+                        icon: Icons.people,
+                        color: const Color(0xFF0F4C81),
+                        growth: '+12.4%',
+                        trend: 'up',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Bài viết',
+                        count: _tongBaiViet,
+                        icon: Icons.article,
+                        color: const Color(0xFF059669),
+                        growth: '+4.1%',
+                        trend: 'up',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Câu hỏi',
+                        count: _tongCauHoi,
+                        icon: Icons.help,
+                        color: const Color(0xFFEA580C),
+                        growth: 'Stable',
+                        trend: 'neutral',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Hoạt động gần đây - Timeline
+                Expanded(child: _buildTimeline()),
+              ],
+            ),
+          ),
+
+          // Cột phải (40%)
+          const SizedBox(width: 24),
+          Expanded(
+            flex: 4,
+            child: Column(
+              children: [
+                // Quick Analytics Chart
+                _buildAnalyticsChart(),
+                const SizedBox(height: 16),
+                // Top Contributors
+                _buildTopContributors(),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  // ===== STAT CARD =====
+  Widget _buildStatCard({
+    required String label,
+    required int count,
+    required IconData icon,
+    required Color color,
+    required String growth,
+    required String trend,
+  }) {
+    final isUp = trend == 'up';
+    final isNeutral = trend == 'neutral';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.center, // Căn giữa theo chiều dọc
+        children: [
+          // Icon container - căn giữa hoàn hảo
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [color, color.withOpacity(0.7)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16), // Khoảng cách cố định 16px
+          // Text block - căn dọc hoàn hảo
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // Căn giữa theo chiều dọc
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$count',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Growth pill
+                if (!isNeutral)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (isUp ? Colors.green : Colors.red).withOpacity(
+                        0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isUp ? Icons.trending_up : Icons.trending_down,
+                          size: 12,
+                          color: isUp ? Colors.green : Colors.red,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          growth,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: isUp ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      growth,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== TIMELINE =====
+  Widget _buildTimeline() {
+    final List<Map<String, dynamic>> activities = [
+      {
+        'title': '15 người dùng mới',
+        'time': 'Hôm nay, 14:30',
+        'icon': Icons.person_add,
+        'color': const Color(0xFF0F4C81),
+      },
+      {
+        'title': '8 câu hỏi mới',
+        'time': 'Hôm nay, 10:15',
+        'icon': Icons.help,
+        'color': const Color(0xFFEA580C),
+      },
+      {
+        'title': '3 bài viết mới',
+        'time': 'Hôm qua, 20:45',
+        'icon': Icons.edit,
+        'color': const Color(0xFF059669),
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Hoạt động gần đây',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.separated(
+              itemCount: activities.length,
+              // KHÔNG CÓ divider ngang
+              separatorBuilder: (_, __) => const SizedBox(height: 20),
+              itemBuilder: (context, index) {
+                final item = activities[index];
+                final isLast = index == activities.length - 1;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Cột trái: đường line + node
+                    SizedBox(
+                      width: 40,
+                      child: Column(
+                        children: [
+                          // Node tròn
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: item['color'].withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              item['icon'],
+                              color: item['color'],
+                              size: 20,
+                            ),
+                          ),
+                          // Đường line dọc (không có cho item cuối)
+                          if (!isLast)
+                            Container(
+                              width: 2,
+                              height: 20,
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Cột phải: nội dung
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title'],
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item['time'],
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== ANALYTICS CHART =====
+  Widget _buildAnalyticsChart() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Phân bổ người dùng',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Center: Doughnut chart
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Doughnut chart
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 2,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _ArcPainter(
+                              color: const Color(0xFF0F4C81),
+                              startAngle: 0,
+                              sweepAngle: 252,
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _ArcPainter(
+                              color: const Color(0xFFEF4444),
+                              startAngle: 252,
+                              sweepAngle: 108,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text(
+                    '100',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+
+              // Legend - căn giữa theo chiều dọc
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLegendItem('User', const Color(0xFF0F4C81), 70),
+                  const SizedBox(height: 8),
+                  _buildLegendItem('Admin', const Color(0xFFEF4444), 30),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color, int percent) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label $percent%',
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF475569),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ===== TOP CONTRIBUTORS =====
+  Widget _buildTopContributors() {
+    final List<Map<String, dynamic>> contributors = [
+      {
+        'name': 'Nguyễn Văn A',
+        'role': 'Admin',
+        'color': const Color(0xFF0F4C81),
+      },
+      {'name': 'Trần Thị B', 'role': 'User', 'color': const Color(0xFF059669)},
+      {'name': 'Lê Văn C', 'role': 'User', 'color': const Color(0xFFEA580C)},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Đóng góp nổi bật',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...contributors.map((item) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: item['color'].withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        item['name'][0],
+                        style: TextStyle(
+                          color: item['color'],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['name'],
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        Text(
+                          item['role'],
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ===== CUSTOM PAINTER CHO DOUGHNUT CHART =====
+class _ArcPainter extends CustomPainter {
+  final Color color;
+  final double startAngle;
+  final double sweepAngle;
+
+  const _ArcPainter({
+    required this.color,
+    required this.startAngle,
+    required this.sweepAngle,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16
+      ..strokeCap = StrokeCap.butt;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius - 8),
+      startAngle * 3.14159 / 180,
+      sweepAngle * 3.14159 / 180,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
