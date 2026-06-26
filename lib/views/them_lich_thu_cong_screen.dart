@@ -37,7 +37,7 @@ class _ThemLichThuCongScreenState extends State<ThemLichThuCongScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Thêm lịch thủ công',
+          'Thêm lịch',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.surface,

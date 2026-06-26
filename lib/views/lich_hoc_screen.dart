@@ -375,7 +375,11 @@ class _LichHocScreenState extends State<LichHocScreen> {
 
         // Card sự kiện bên phải
         Expanded(
-          child: Container(
+          child: GestureDetector(
+            onTap: () {
+              _hienThiPopupChiTiet(lich);
+            },
+            child: Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -476,6 +480,7 @@ class _LichHocScreenState extends State<LichHocScreen> {
                 ],
               ),
             ),
+          ),
           ),
         ),
       ],
@@ -1150,6 +1155,257 @@ class _LichHocScreenState extends State<LichHocScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: isSelected ? AppColors.primary : Colors.white70,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _hienThiPopupChiTiet(LichHocImport lich) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent, // Quan trọng để làm trong suốt
+      builder: (context) {
+        return Container(
+          // Thêm margin để tạo khoảng cách với 2 bên màn hình
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24), // Bo góc to hơn (24px)
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1), // Thêm bóng đổ nhẹ
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Thanh kéo nhỏ ở trên cùng (đã tinh chỉnh)
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 2. Tiêu đề lịch (Màu đậm hơn)
+                Text(
+                  lich.tenMon,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 3. Thời gian (Dùng hàng ngang đẹp hơn)
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.access_time, size: 18, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Thời gian', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                        Text(
+                          '${_formatTime(lich.gioBatDau)} - ${_formatTime(lich.gioKetThuc)}',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                // 4. Địa điểm (Nếu có)
+                if (lich.diaDiem.isNotEmpty && lich.diaDiem != 'Thủ công') ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.location_on, size: 18, color: AppColors.accent),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Địa điểm', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                          Text(
+                            lich.diaDiem,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                // 5. Nút Xóa (Đổi sang dạng Outlined Button để đẹp hơn)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _hienThiXacNhanXoa(lich.id);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.error), // Viền đỏ
+                      foregroundColor: AppColors.error, // Màu chữ đỏ
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.delete_outline, size: 20),
+                        SizedBox(width: 8),
+                        Text('Xóa lịch này', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Hàm hiển thị hộp thoại xác nhận Xóa
+  void _hienThiXacNhanXoa(String idLich) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Người dùng bấm ra ngoài không tắt được, phải bấm nút
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 1. Icon cảnh báo màu đỏ lớn
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever_rounded,
+                  size: 32,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 2. Tiêu đề
+              const Text(
+                'Xác nhận xóa',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // 3. Nội dung
+              const Text(
+                'Bạn chắc chắn muốn xóa lịch này không?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 4. Hai nút hành động
+              Row(
+                children: [
+                  // Nút Hủy (Chiếm 1/2)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.border),
+                        foregroundColor: AppColors.textSecondary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text('Hủy', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Nút Xóa (Chiếm 1/2)
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Đóng hộp thoại xác nhận
+                        _lichHocService.xoaLichHoc(idLich);
+
+                        // Hiện thông báo thành công đẹp hơn chút
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã xóa lịch thành công!'),
+                            backgroundColor: AppColors.error, // Màu đỏ cho thông báo
+                            behavior: SnackBarBehavior.floating, // Nổi lên, không dính sát đáy
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('Xóa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

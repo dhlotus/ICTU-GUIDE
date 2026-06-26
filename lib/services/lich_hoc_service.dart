@@ -66,4 +66,5 @@ class LichHocService {
   Future<void> xoaLichHoc(String id) async {
     await _firestore.collection('lich_hoc').doc(id).delete();
   }
+
 }

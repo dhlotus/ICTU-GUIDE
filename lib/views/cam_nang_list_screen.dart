@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/app_colors.dart';
 import '../models/cam_nang.dart';
 import 'cam_nang_detail_screen.dart';
+import '../services/cam_nang_service.dart';
 
 /// Màn hình danh sách Cẩm nang - Thiết kế cao cấp 2026
 class CamNangListScreen extends StatefulWidget {
@@ -12,9 +13,9 @@ class CamNangListScreen extends StatefulWidget {
 }
 
 class _CamNangListScreenState extends State<CamNangListScreen> {
-  late List<CamNang> _danhSachCamNang;
   String _tuKhoaTimKiem = '';
   int _danhMucDangChon = 0;
+  final CamNangService _camNangService = CamNangService();
 
   final List<Map<String, dynamic>> _danhSachDanhMuc = [
     {'ten': 'Tất cả', 'icon': Icons.apps},
@@ -27,69 +28,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
   @override
   void initState() {
     super.initState();
-    _danhSachCamNang = [
-      CamNang(
-        id: '1',
-        tieuDe: 'Hướng dẫn đăng ký tín chỉ',
-        noiDung:
-            'Hướng dẫn chi tiết các bước đăng ký môn học qua cổng thông tin sinh viên. Bao gồm: cách chọn môn, xác nhận và nộp học phí.',
-        ngayTao: DateTime.now(),
-        luotXem: 1200,
-      ),
-      CamNang(
-        id: '2',
-        tieuDe: 'Quy định đào tạo tín chỉ',
-        noiDung:
-            'Các quy định mới nhất về đào tạo theo hệ thống tín chỉ, áp dụng từ năm học 2025-2026.',
-        ngayTao: DateTime.now(),
-        luotXem: 856,
-      ),
-      CamNang(
-        id: '3',
-        tieuDe: 'Hướng dẫn đóng học phí',
-        noiDung:
-            'Các phương thức đóng học phí trực tuyến, hướng dẫn thanh toán qua ngân hàng và ví điện tử.',
-        ngayTao: DateTime.now(),
-        luotXem: 543,
-      ),
-      CamNang(
-        id: '4',
-        tieuDe: 'Sơ đồ các phòng ban',
-        noiDung:
-            'Vị trí và chức năng của các phòng ban trong trường, giúp sinh viên dễ dàng liên hệ khi cần.',
-        ngayTao: DateTime.now(),
-        luotXem: 432,
-      ),
-      CamNang(
-        id: '5',
-        tieuDe: 'Thư viện ICTU: Hướng dẫn mượn sách',
-        noiDung:
-            'Quy trình mượn/trả sách tại thư viện, tra cứu tài liệu trực tuyến.',
-        ngayTao: DateTime.now(),
-        luotXem: 312,
-      ),
-    ];
-  }
 
-  List<CamNang> get _danhSachLoc {
-    var ketQua = _danhSachCamNang;
-
-    if (_danhMucDangChon != 0) {
-      // Demo lọc theo danh mục
-      ketQua = ketQua.where((item) {
-        if (_danhMucDangChon == 1) return item.id == '1' || item.id == '2';
-        if (_danhMucDangChon == 2) return item.id == '3';
-        return true;
-      }).toList();
-    }
-
-    if (_tuKhoaTimKiem.isNotEmpty) {
-      ketQua = ketQua.where((item) {
-        return item.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
-      }).toList();
-    }
-
-    return ketQua;
   }
 
   @override
@@ -112,7 +51,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
               child: Text(
-                '${_danhSachLoc.length} bài viết',
+                'Danh sách bài viết',
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textTertiary,
@@ -121,18 +60,50 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
               ),
             ),
           ),
+          StreamBuilder<List<CamNang>>(
+            stream: _camNangService.layDanhSachCamNang(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const SliverToBoxAdapter(
+                  child: Center(child: Text('Lỗi tải dữ liệu')),
+                );
+              }
 
-          // Danh sách bài viết
-          _danhSachLoc.isEmpty
-              ? const SliverFillRemaining(
-                  child: Center(child: Text('Không tìm thấy bài viết')),
-                )
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final baiViet = _danhSachLoc[index];
+              if (!snapshot.hasData) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              var danhSach = snapshot.data!;
+
+              // Lọc theo từ khóa tìm kiếm (nếu có)
+              if (_tuKhoaTimKiem.isNotEmpty) {
+                danhSach = danhSach.where((baiViet) {
+                  return baiViet.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                }).toList();
+              }
+
+              if (danhSach.isEmpty) {
+                return const SliverToBoxAdapter( // Đổi thành SliverToBoxAdapter
+                  child: Padding(
+                    padding: EdgeInsets.all(40), // Thêm padding để chữ nằm giữa màn hình đẹp hơn
+                    child: Center(child: Text('Không tìm thấy bài viết')),
+                  ),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final baiViet = danhSach[index];
                     return _buildBaiVietCard(baiViet);
-                  }, childCount: _danhSachLoc.length),
+                  },
+                  childCount: danhSach.length,
                 ),
+              );
+            },
+          ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
