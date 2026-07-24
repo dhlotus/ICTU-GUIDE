@@ -36,14 +36,6 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: Text(
-                'Danh sách bài viết',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textTertiary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ),
           ),
           StreamBuilder<List<CamNang>>(
@@ -106,7 +98,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                 return const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(40),
-                    child: Center(child: Text('Không tìm thấy bài viết')),
+                    child: Center(child: Text('Không có bài viết nào rùi!')),
                   ),
                 );
               }

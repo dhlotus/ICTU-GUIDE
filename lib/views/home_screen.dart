@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ictu_guide/views/ban_do_screen.dart';
 import '../config/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../models/lich_hoc.dart';
@@ -76,6 +77,11 @@ class _HomeScreenState extends State<HomeScreen> {
           });
           if (index == 1) {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const CamNangListScreen()));
+          } else if ( index == 2) {
+            Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (_) => const BanDoScreen())
+            );
           } else if (index == 3) {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const CauHoiListScreen()));
           } else if (index == 4) {

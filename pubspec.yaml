@@ -22,10 +22,11 @@ dependencies:
   firebase_storage: ^12.4.4
   cached_network_image: ^3.4.1
   flutter_local_notifications: ^18.0.1
-
-
+  webview_flutter: ^4.10.0
   timezone: any
   flutter_launcher_icons: ^0.14.4
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
