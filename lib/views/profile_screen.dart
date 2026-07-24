@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ictu_guide/views/about_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import '../config/app_colors.dart';
 import '../services/storage_service.dart';
@@ -629,7 +630,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.info,
             title: 'Giới thiệu ứng dụng',
             onTap: () {
-              _thongBaoPhatTrien();
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutScreen())
+              );
             },
           ),
         ],
