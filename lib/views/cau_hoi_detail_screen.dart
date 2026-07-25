@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../config/app_colors.dart';
 import '../models/cau_hoi.dart';
 import '../models/cau_tra_loi.dart';
+import '../services/cau_hoi_service.dart';
+import 'dangnhap_screen.dart';
 
-/// Màn hình chi tiết câu hỏi và câu trả lời
 class CauHoiDetailScreen extends StatefulWidget {
   final CauHoi cauHoi;
 
@@ -14,22 +16,18 @@ class CauHoiDetailScreen extends StatefulWidget {
 }
 
 class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
-  late List<CauTraLoi> _danhSachTraLoi;
+  final CauHoiService _cauHoiService = CauHoiService();
   final TextEditingController _traLoiController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _danhSachTraLoi = CauTraLoi.getMockData(widget.cauHoi.id);
-  }
+  bool _dangDangTraLoi = false;
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // AppBar
           SliverAppBar(
             title: const Text(
               'Chi tiết câu hỏi',
@@ -48,55 +46,177 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
             ),
           ),
 
-          // Nội dung câu hỏi
-          SliverToBoxAdapter(
-            child: _buildCauHoiSection(),
-          ),
-
-          // Header của phần câu trả lời
+          SliverToBoxAdapter(child: _buildCauHoiSection()),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 12), // Căn chỉnh padding khớp với giao diện
               child: Row(
                 children: [
-                  Text(
-                    '${_danhSachTraLoi.length} câu trả lời',
+                  // Icon nhỏ bên trái
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  // Dòng chữ tiêu đề
+                  const Text(
+                    'Câu trả lời',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Mới nhất'),
+                  const SizedBox(width: 12),
+                  // Đường kẻ mảnh chạy dài sang phải cho đẹp
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: AppColors.border.withOpacity(0.5),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+          // --- BẮT ĐẦU SỬA: DÙNG STREAM TỪ FIRESTORE ---
+          StreamBuilder<List<CauTraLoi>>(
+            stream: _cauHoiService.layDanhSachTraLoi(widget.cauHoi.id),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        'Lỗi chi tiết:\n${snapshot.error}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                );
+              }
 
-          // Danh sách câu trả lời
-          if (_danhSachTraLoi.isEmpty)
-            const SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: Text('Chưa có câu trả lời nào'),
+              if (!snapshot.hasData) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final danhSach = snapshot.data!;
+
+              if (danhSach.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 20),
+                    child: Column(
+                      children: [
+                        // 1. Hero Graphic: Icon lớn, nền gradient bừng sáng có bóng đổ mạnh
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppColors.primary,
+                                AppColors.accent,
+                                const Color(0xFF82B1FF), // Màu xanh sáng hơn
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.5),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15), // Bóng đổ sâu và lan rộng
+                              ),
+                            ],
+                          ),
+                          // Dùng icon ngôi sao hoặc bong bóng với nét vẽ dày
+                          child: const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // 2. Nổi bật Tiêu đề: Màu tối đậm, to rõ
+                        const Text(
+                          '✨ Chưa có câu trả lời nào!',
+                          style: TextStyle(
+                            fontSize: 24, // To hơn
+                            fontWeight: FontWeight.w900, // Đậm hơn nữa
+                            color: Color(0xFF0F172A), // Màu than chì đậm nhất
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // 3. Mô tả phụ nhẹ nhàng hơn
+                        const Text(
+                          'Hãy là người tiên phong mang đến \ncâu trả lời chất lượng cho cộng đồng!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.6,
+                            color: Color(0xFF475569), // Màu xám đậm hơn chút để đọc rõ
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // 4. Một cái "Tip nhỏ" (Lời khuyên) có nền màu vàng nhạt để nổi bật
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFBE6), // Nền vàng nhạt
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFFFF0B3), width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lightbulb_outline, color: Color(0xFFD97706), size: 18),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Chia sẻ kiến thức của bạn ngay bây giờ!',
+                                style: TextStyle(
+                                  color: Color(0xFF92400E),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final traLoi = danhSach[index];
+                    return _buildTraLoiCard(traLoi);
+                  },
+                  childCount: danhSach.length,
                 ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  final traLoi = _danhSachTraLoi[index];
-                  return _buildTraLoiCard(traLoi);
-                },
-                childCount: _danhSachTraLoi.length,
-              ),
-            ),
+              );
+            },
+          ),
+          // --- HẾT SỬA ---
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
@@ -105,7 +225,7 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
     );
   }
 
-  /// Phần hiển thị câu hỏi
+  // --- GIỮ NGUYÊN CÁC HÀM UI CŨ (CHỈ CẦN CHECK LẠI XEM CÓ ĐÚNG TÊN FILE KHÔNG) ---
   Widget _buildCauHoiSection() {
     return Container(
       margin: const EdgeInsets.all(20),
@@ -124,7 +244,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + tên + thời gian
           Row(
             children: [
               Container(
@@ -169,10 +288,7 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Tiêu đề
           Text(
             widget.cauHoi.tieuDe,
             style: const TextStyle(
@@ -181,10 +297,7 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               height: 1.3,
             ),
           ),
-
           const SizedBox(height: 12),
-
-          // Nội dung
           Text(
             widget.cauHoi.noiDung,
             style: TextStyle(
@@ -198,21 +311,13 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
     );
   }
 
-  /// Card hiển thị câu trả lời
   Widget _buildTraLoiCard(CauTraLoi traLoi) {
-    final isBestAnswer = traLoi.id == 'tl1'; // Demo: câu trả lời đầu là best
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isBestAnswer
-            ? AppColors.success.withOpacity(0.05)
-            : AppColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: isBestAnswer
-            ? Border.all(color: AppColors.success.withOpacity(0.3), width: 1)
-            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -224,7 +329,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: avatar + tên + thời gian
           Row(
             children: [
               Container(
@@ -250,34 +354,12 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          traLoi.hoTenNguoiDung,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        if (isBestAnswer) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Best',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      traLoi.hoTenNguoiDung,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       _formatTime(traLoi.ngayTao),
@@ -289,32 +371,9 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                   ],
                 ),
               ),
-              // Nút hữu ích
-              Column(
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      traLoi.huuIch ? Icons.thumb_up : Icons.thumb_up_outlined,
-                      size: 18,
-                      color: traLoi.huuIch ? AppColors.success : AppColors.textTertiary,
-                    ),
-                  ),
-                  Text(
-                    traLoi.huuIch ? '25' : '0',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
-
           const SizedBox(height: 10),
-
-          // Nội dung trả lời
           Text(
             traLoi.noiDung,
             style: TextStyle(
@@ -328,8 +387,9 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
     );
   }
 
-  /// Ô nhập câu trả lời ở dưới cùng
   Widget _buildAnswerInput() {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -370,16 +430,63 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              onPressed: () {
-                if (_traLoiController.text.isNotEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tính năng đang phát triển')),
+              onPressed: () async {
+                if (user == null) {
+                  _yeuCauDangNhap();
+                  return;
+                }
+                if (_traLoiController.text.trim().isEmpty) return;
+
+                setState(() => _dangDangTraLoi = true);
+                try {
+                  await _cauHoiService.themTraLoi(
+                    widget.cauHoi.id,
+                    _traLoiController.text.trim(),
                   );
                   _traLoiController.clear();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã gửi câu trả lời!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi: $e')),
+                  );
+                } finally {
+                  setState(() => _dangDangTraLoi = false);
                 }
               },
-              icon: const Icon(Icons.send, color: Colors.white, size: 18),
+              icon: _dangDangTraLoi
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.send, color: Colors.white, size: 18),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _yeuCauDangNhap() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Cần đăng nhập'),
+        content: const Text('Vui lòng đăng nhập để trả lời câu hỏi.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DangNhapScreen()),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+            child: const Text('Đăng nhập'),
           ),
         ],
       ),
@@ -394,8 +501,10 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
       return '${diff.inMinutes} phút trước';
     } else if (diff.inDays < 1) {
       return '${diff.inHours} giờ trước';
-    } else {
+    } else if (diff.inDays < 7) {
       return '${diff.inDays} ngày trước';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
   }
 
