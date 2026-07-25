@@ -619,14 +619,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           _buildDivider(),
           _buildMenuItem(
-            icon: Icons.notifications,
-            title: 'Cài đặt thông báo',
-            onTap: () {
-              _thongBaoPhatTrien();
-            },
-          ),
-          _buildDivider(),
-          _buildMenuItem(
             icon: Icons.info,
             title: 'Giới thiệu ứng dụng',
             onTap: () {

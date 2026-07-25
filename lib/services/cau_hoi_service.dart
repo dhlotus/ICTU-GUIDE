@@ -76,4 +76,8 @@ class CauHoiService {
 
     await _firestore.collection('cau_tra_loi').add(traLoiMoi);
   }
+  /// Xóa câu hỏi theo ID
+  Future<void> xoaCauHoi(String id) async {
+    await _firestore.collection('cau_hoi').doc(id).delete();
+  }
 }

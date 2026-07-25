@@ -294,6 +294,25 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
                       ],
                     ),
                   ),
+
+                  // --- THÊM NÚT XÓA VÀO ĐÂY ---
+                  if (FirebaseAuth.instance.currentUser?.uid == cauHoi.nguoiDungId)
+                    GestureDetector(
+                      onTap: () {
+                        // Gọi hàm xóa ở Bước 3
+                        _hienThiXacNhanXoaCauHoi(cauHoi.id);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                      ),
+                    ),
+                  // --- HẾT PHẦN THÊM ---
+
                   if (cauHoi.trangThai == 'da_giai_dap')
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -371,12 +390,50 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
+    // Trường hợp 1: Dưới 1 giờ (Hiện phút)
     if (diff.inHours < 1) {
       return '${diff.inMinutes} phút trước';
-    } else if (diff.inDays < 1) {
+    }
+    // Trường hợp 2: Dưới 24 giờ (Hiện giờ)
+    else if (diff.inDays < 1) {
       return '${diff.inHours} giờ trước';
-    } else {
+    }
+    // Trường hợp 3: Dưới 7 ngày (Hiện ngày)
+    else if (diff.inDays < 7) {
       return '${diff.inDays} ngày trước';
     }
+    // Trường hợp 4: Hơn 7 ngày (Hiện ngày tháng năm)
+    else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+  }
+
+  // Hàm hiện hộp thoại xác nhận xóa
+  void _hienThiXacNhanXoaCauHoi(String idCauHoi) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa câu hỏi này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _cauHoiService.xoaCauHoi(idCauHoi);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã xóa câu hỏi thành công')),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
   }
 }
