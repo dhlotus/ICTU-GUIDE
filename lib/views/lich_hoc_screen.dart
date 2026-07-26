@@ -35,18 +35,25 @@ class _LichHocScreenState extends State<LichHocScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          _buildAppBar(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Khi kéo xuống, chỉ cần delay nhẹ.
+          // Stream từ _lichHocService.layDanhSachLichHoc() sẽ tự động cập nhật lại.
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: Column(
+          children: [
+            _buildAppBar(),
 
-          // Chỉ hiển thị Date Strip khi ở chế độ NGÀY
-          if (!_cheDoTuan) _buildDateStrip(),
+            // Chỉ hiển thị Date Strip khi ở chế độ NGÀY
+            if (!_cheDoTuan) _buildDateStrip(),
 
-          // Nội dung chính
-          Expanded(
-            child: _cheDoTuan ? _buildWeekView() : _buildDayView(),
-          ),
-        ],
+            // Nội dung chính
+            Expanded(
+              child: _cheDoTuan ? _buildWeekView() : _buildDayView(),
+            ),
+          ],
+        ),
       ),
     );
   }

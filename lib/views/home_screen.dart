@@ -60,13 +60,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: _buildBody(),  // Gọi hàm _buildBody
-            ),
-          ],
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _buildBody(),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavBar(

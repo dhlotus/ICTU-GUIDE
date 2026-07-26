@@ -401,25 +401,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _dangTai
-          ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _buildPremiumHeader(),
-                const SizedBox(height: 16),
-                _buildMenuGroup(),
-                const SizedBox(height: 24),
-                _buildLogoutButton(),
-                const SizedBox(height: 40),
-              ],
-            ),
+        body: _dangTai
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+          onRefresh: () async {
+            // Khi người dùng kéo xuống, gọi hàm load lại dữ liệu
+            // Hàm _layThongTinNguoiDung() sẽ cập nhật lại Avatar và Tên từ Firebase
+            _layThongTinNguoiDung();
+            // Delay nhẹ để thấy hiệu ứng xoay
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: CustomScrollView(
+            slivers: [
+              _buildAppBar(),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildPremiumHeader(),
+                    const SizedBox(height: 16),
+                    _buildMenuGroup(),
+                    const SizedBox(height: 24),
+                    _buildLogoutButton(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+      )
     );
   }
 

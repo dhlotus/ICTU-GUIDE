@@ -32,64 +32,73 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverHeader(),
-          _buildSliverSearchBar(),
-          _buildSliverBoLoc(),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            // Delay nhẹ để người dùng thấy hiệu ứng
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: CustomScrollView(
+              slivers: [
+                _buildSliverHeader(),
+                _buildSliverSearchBar(),
+                _buildSliverBoLoc(),
 
-          // Danh sách câu hỏi từ Firestore
-          StreamBuilder<List<CauHoi>>(
-            stream: _cauHoiService.layDanhSachCauHoi(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return SliverToBoxAdapter(
-                  child: Center(child: Text('Lỗi: ${snapshot.error}')),
-                );
-              }
-
-              if (!snapshot.hasData) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              var danhSach = snapshot.data!;
-
-              // Lọc theo từ khóa
-              if (_tuKhoaTimKiem.isNotEmpty) {
-                danhSach = danhSach.where((cauHoi) {
-                  return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
-                      cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
-                }).toList();
-              }
-
-              // Lọc theo bộ lọc (đơn giản)
-              if (_boLocDangChon == 2) {
-                danhSach = danhSach.where((c) => c.trangThai == 'dang_cho').toList();
-              }
-
-              if (danhSach.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('Không có câu hỏi nào')),
-                );
-              }
-
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final cauHoi = danhSach[index];
-                    return _buildCauHoiCard(cauHoi);
-                  },
-                  childCount: danhSach.length,
+                SliverToBoxAdapter(
+                  child: SizedBox(height: 20),
                 ),
-              );
-            },
-          ),
+                  // Danh sách câu hỏi từ Firestore
+                  StreamBuilder<List<CauHoi>>(
+                    stream: _cauHoiService.layDanhSachCauHoi(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return SliverToBoxAdapter(
+                          child: Center(child: Text('Lỗi: ${snapshot.error}')),
+                        );
+                      }
 
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
-        ],
-      ),
+                      if (!snapshot.hasData) {
+                        return const SliverFillRemaining(
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      var danhSach = snapshot.data!;
+
+                      // Lọc theo từ khóa
+                      if (_tuKhoaTimKiem.isNotEmpty) {
+                        danhSach = danhSach.where((cauHoi) {
+                          return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
+                              cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                        }).toList();
+                      }
+
+                      // Lọc theo bộ lọc (đơn giản)
+                      if (_boLocDangChon == 2) {
+                        danhSach = danhSach.where((c) => c.trangThai == 'dang_cho').toList();
+                      }
+
+                      if (danhSach.isEmpty) {
+                        return const SliverFillRemaining(
+                          child: Center(child: Text('Không có câu hỏi nào')),
+                        );
+                      }
+
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                            final cauHoi = danhSach[index];
+                            return _buildCauHoiCard(cauHoi);
+                          },
+                          childCount: danhSach.length,
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
+          ),
+        ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (user == null) {

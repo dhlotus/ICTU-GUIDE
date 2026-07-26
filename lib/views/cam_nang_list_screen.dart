@@ -28,101 +28,95 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverHeader(),
-          _buildSliverSearchBar(),
-          _buildSliverDanhMuc(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            ),
-          ),
-          StreamBuilder<List<CamNang>>(
-            stream: _camNangService.layDanhSachCamNang(),
-            builder: (context, snapshot) {
-              // 1. Nếu có lỗi, in lỗi ra màn hình và console
-              if (snapshot.hasError) {
-                print('>>> LỖI FIREBASE: ${snapshot.error}'); // Dòng này sẽ in lỗi ra cửa sổ Run
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Lỗi tải dữ liệu:\n${snapshot.error}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Khi kéo xuống, nó chỉ cần gọi hàm này để báo hiệu đã refresh
+          // StreamBuilder sẽ tự động load lại dữ liệu từ Firebase
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverHeader(),
+            _buildSliverSearchBar(),
+            _buildSliverDanhMuc(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Text(
+                  'Danh sách bài viết',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w500,
                   ),
-                );
-              }
-
-              // 2. Đang tải dữ liệu
-              if (!snapshot.hasData) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              // 3. Có dữ liệu, bắt đầu lọc
-              var danhSach = snapshot.data!;
-              if (_danhMucDangChon != 0) {
-                // Lấy tên danh mục dựa vào index đang chọn
-                String tenDanhMuc = _danhSachDanhMuc[_danhMucDangChon]['ten'];
-                danhSach = danhSach.where((baiViet) {
-                  // So sánh danhMuc trong database với tên danh mục trên nút bấm
-                  // Dùng .toLowerCase() để tránh lỗi viết hoa/viết thường
-                  if (baiViet.danhMuc == null) return false;
-                  return baiViet.danhMuc!.toLowerCase() == tenDanhMuc.toLowerCase();
-                }).toList();
-              }
-
-              // Lọc theo từ khóa tìm kiếm (nếu có)
-              if (_tuKhoaTimKiem.isNotEmpty) {
-                danhSach = danhSach.where((baiViet) {
-                  return baiViet.tieuDe
-                      .toLowerCase()
-                      .contains(_tuKhoaTimKiem.toLowerCase());
-                }).toList();
-              }
-
-              // 4. Danh sách rỗng
-              if (danhSach.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: Text('Không có bài viết nào rùi!')),
-                  ),
-                );
-              }
-
-              // 5. Hiển thị danh sách
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final baiViet = danhSach[index];
-                    return _buildBaiVietCard(baiViet);
-                  },
-                  childCount: danhSach.length,
                 ),
-              );
-            },
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-        ],
+              ),
+            ),
+            // --- Phần StreamBuilder ---
+            StreamBuilder<List<CamNang>>(
+              stream: _camNangService.layDanhSachCamNang(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 300,
+                      child: Center(child: Text('Lỗi tải dữ liệu: ${snapshot.error}')),
+                    ),
+                  );
+                }
+
+                if (!snapshot.hasData) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                var danhSach = snapshot.data!;
+
+                // Lọc theo danh mục
+                if (_danhMucDangChon != 0) {
+                  String tenDanhMuc = _danhSachDanhMuc[_danhMucDangChon]['ten'];
+                  danhSach = danhSach.where((baiViet) {
+                    if (baiViet.danhMuc == null) return false;
+                    return baiViet.danhMuc!.toLowerCase() == tenDanhMuc.toLowerCase();
+                  }).toList();
+                }
+
+                // Lọc theo từ khóa
+                if (_tuKhoaTimKiem.isNotEmpty) {
+                  danhSach = danhSach.where((baiViet) {
+                    return baiViet.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                  }).toList();
+                }
+
+                if (danhSach.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 300,
+                      child: Center(child: Text('Không tìm thấy bài viết')),
+                    ),
+                  );
+                }
+
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final baiViet = danhSach[index];
+                      return _buildBaiVietCard(baiViet);
+                    },
+                    childCount: danhSach.length,
+                  ),
+                );
+              },
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 30)),
+          ],
+        ),
       ),
     );
   }
 
-  // Các hàm _buildSliverHeader, _buildSliverSearchBar, _buildSliverDanhMuc, _buildBaiVietCard
-  // giữ nguyên y hệt như file cũ của bạn. (Mình không copy lại để đỡ dài, bạn giữ lại code cũ của bạn ở các hàm này nhé).
+  // Các hàm UI cũ giữ nguyên y hệt
   Widget _buildSliverHeader() {
     return SliverAppBar(
       expandedHeight: 100,
@@ -140,10 +134,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
       ),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.only(left: 56, bottom: 12),
-        title: const Text(
-          'Cẩm nang sinh viên',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Cẩm nang sinh viên', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         background: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -166,19 +157,11 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 2),
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 2)),
             ],
           ),
           child: TextField(
-            onChanged: (value) {
-              setState(() {
-                _tuKhoaTimKiem = value;
-              });
-            },
+            onChanged: (value) => setState(() => _tuKhoaTimKiem = value),
             decoration: InputDecoration(
               hintText: 'Tìm kiếm bài viết...',
               hintStyle: TextStyle(color: AppColors.textTertiary),
@@ -204,30 +187,18 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
           itemBuilder: (context, index) {
             final danhMuc = _danhSachDanhMuc[index];
             final isSelected = index == _danhMucDangChon;
-
             return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _danhMucDangChon = index;
-                });
-              },
+              onTap: () => setState(() => _danhMucDangChon = index),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: isSelected ? Colors.transparent : AppColors.border,
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: isSelected ? Colors.transparent : AppColors.border, width: 1.2),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      danhMuc['icon'],
-                      size: 18,
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                    ),
+                    Icon(danhMuc['icon'], size: 18, color: isSelected ? Colors.white : AppColors.textSecondary),
                     const SizedBox(width: 8),
                     Text(
                       danhMuc['ten'],
@@ -252,9 +223,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => CamNangDetailScreen(baiViet: baiViet),
-          ),
+          MaterialPageRoute(builder: (context) => CamNangDetailScreen(baiViet: baiViet)),
         );
       },
       child: Container(
@@ -262,13 +231,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -278,9 +241,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => CamNangDetailScreen(baiViet: baiViet),
-                  ),
+                  MaterialPageRoute(builder: (context) => CamNangDetailScreen(baiViet: baiViet)),
                 );
               },
               child: Padding(
@@ -311,11 +272,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                             children: [
                               Text(
                                 baiViet.tieuDe,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.3,
-                                ),
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, height: 1.3),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -345,11 +302,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                     const SizedBox(height: 12),
                     Text(
                       baiViet.noiDung,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -367,11 +320,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
                           const SizedBox(width: 4),
                           Text(
                             'Đào tạo',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.accentDark,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: TextStyle(fontSize: 11, color: AppColors.accentDark, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
