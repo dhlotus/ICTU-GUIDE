@@ -43,4 +43,19 @@ class CamNangService {
 
     await _firestore.collection('cam_nang').add(baiVietMoi);
   }
+  /// Tăng lượt xem cho bài viết
+  Future<void> tangLuotXem(String id) async {
+    // Lấy document hiện tại
+    final docRef = _firestore.collection('cam_nang').doc(id);
+
+    // Dùng transaction để đảm bảo dữ liệu không bị lệch nếu 2 người cùng xem lúc
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (snapshot.exists) {
+        final currentLuotXem = snapshot.data()?['luotXem'] ?? 0;
+        // Cộng thêm 1
+        transaction.update(docRef, {'luotXem': currentLuotXem + 1});
+      }
+    });
+  }
 }

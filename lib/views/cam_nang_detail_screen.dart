@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
 import '../config/app_colors.dart';
 import '../models/cam_nang.dart';
+import '../services/cam_nang_service.dart';
 
-class CamNangDetailScreen extends StatelessWidget {
+/// Màn hình chi tiết bài viết - Seamless Editorial UI
+class CamNangDetailScreen extends StatefulWidget {
   final CamNang baiViet;
 
   const CamNangDetailScreen({super.key, required this.baiViet});
+
+  @override
+  State<CamNangDetailScreen> createState() => _CamNangDetailScreenState();
+}
+
+class _CamNangDetailScreenState extends State<CamNangDetailScreen> {
+  // Khai báo Service ở đây (để tránh lỗi const)
+  final CamNangService _camNangService = CamNangService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Gọi hàm tăng lượt xem ngay khi mở màn hình
+    _tangLuotXem();
+  }
+
+  // Hàm gọi Service tăng lượt xem
+  void _tangLuotXem() {
+    _camNangService.tangLuotXem(widget.baiViet.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +52,12 @@ class CamNangDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- ẢNH BÌA NHỎ (Hình chữ nhật bo góc) ---
+            // --- ẢNH BÌA NHỎ ---
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.network(
-                'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop', // Ảnh placeholder
-                height: 180, // Chiều cao vừa phải
+                'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop',
+                height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
@@ -44,7 +66,7 @@ class CamNangDetailScreen extends StatelessWidget {
 
             // --- TIÊU ĐỀ ---
             Text(
-              _capitalizeTitle(baiViet.tieuDe),
+              _capitalizeTitle(widget.baiViet.tieuDe),
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -54,9 +76,9 @@ class CamNangDetailScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20), // Khoảng cách 20px
+            const SizedBox(height: 20),
 
-            // --- META DATA (Ngày & Giờ đọc) ---
+            // --- META DATA ---
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -65,7 +87,7 @@ class CamNangDetailScreen extends StatelessWidget {
                     const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF64748B)),
                     const SizedBox(width: 6),
                     Text(
-                      _formatDate(baiViet.ngayTao),
+                      _formatDate(widget.baiViet.ngayTao),
                       style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -81,7 +103,7 @@ class CamNangDetailScreen extends StatelessWidget {
                       const Icon(Icons.access_time, size: 12, color: Color(0xFFE65100)),
                       const SizedBox(width: 4),
                       Text(
-                        '${_thoiGianDoc(baiViet.noiDung)} phút đọc',
+                        '${_thoiGianDoc(widget.baiViet.noiDung)} phút đọc',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFE65100)),
                       ),
                     ],
@@ -96,7 +118,7 @@ class CamNangDetailScreen extends StatelessWidget {
 
             // --- NỘI DUNG ---
             Text(
-              baiViet.noiDung,
+              widget.baiViet.noiDung,
               style: const TextStyle(
                 fontSize: 16,
                 height: 1.6,
@@ -112,6 +134,8 @@ class CamNangDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  // --- CÁC HÀM TIỆN ÍCH ---
 
   String _capitalizeTitle(String input) {
     if (input.isEmpty) return input;
