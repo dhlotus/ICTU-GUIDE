@@ -73,4 +73,9 @@ class CauHoiService {
   Future<void> xoaCauHoi(String id) async {
     await _firestore.collection('cau_hoi').doc(id).delete();
   }
+
+  /// xoá câu trả lời theo ID
+  Future<void> xoaTraLoi(String id) async {
+    await _firestore.collection('cau_tra_loi').doc(id).delete();
+  }
 }

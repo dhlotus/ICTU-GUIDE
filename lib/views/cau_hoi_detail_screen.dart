@@ -302,79 +302,123 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
   }
 
   Widget _buildTraLoiCard(CauTraLoi traLoi) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // --- SỬA Ở ĐÂY: Lấy tên và Avatar từ NguoiDungService ---
-          FutureBuilder<Map<String, dynamic>?>(
-            future: _nguoiDungService.layThongTinNguoiDungById(traLoi.nguoiDungId),
-            builder: (context, snapshot) {
-              String displayName = 'Người dùng';
-              String? avatarId;
+    final user = FirebaseAuth.instance.currentUser;
+    final bool isMyAnswer = user?.uid == traLoi.nguoiDungId;
 
-              if (snapshot.hasData && snapshot.data != null) {
-                displayName = snapshot.data!['tenHienThi'] ?? 'Người dùng';
-                avatarId = snapshot.data!['avatarId'];
-              }
-
-              return Row(
-                children: [
-                  AvatarWidget(avatarId: avatarId, size: 36),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          _formatTime(traLoi.ngayTao),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
+    // Nội dung bên trong Card (Hiển thị Avatar, Tên, Nội dung)
+    Widget content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FutureBuilder<Map<String, dynamic>?>(
+          future: _nguoiDungService.layThongTinNguoiDungById(traLoi.nguoiDungId),
+          builder: (context, snapshot) {
+            String displayName = 'Người dùng';
+            String? avatarId;
+            if (snapshot.hasData && snapshot.data != null) {
+              displayName = snapshot.data!['tenHienThi'] ?? 'Người dùng';
+              avatarId = snapshot.data!['avatarId'];
+            }
+            return Row(
+              children: [
+                AvatarWidget(avatarId: avatarId, size: 36),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(displayName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                      Text(_formatTime(traLoi.ngayTao), style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
-          // --- HẾT PHẦN SỬA ---
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        Text(traLoi.noiDung, style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.textSecondary)),
+      ],
+    );
 
-          const SizedBox(height: 10),
-
-          Text(
-            traLoi.noiDung,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: AppColors.textSecondary,
+    // Nếu không phải câu trả lời của mình: Hiển thị bình thường
+    if (!isMyAnswer) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: content,
+      );
+    }
+
+    // --- BẮT ĐẦU: Dismissible dành cho câu trả lời của chính mình ---
+    return Dismissible(
+      key: Key(traLoi.id),
+      direction: DismissDirection.endToStart, // Vuốt từ phải sang trái
+
+      // Nền màu đỏ hiện ra khi vuốt (nằm ở phía sau cái Card trắng)
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.error, // Màu đỏ
+          borderRadius: BorderRadius.circular(20),
+        ),
+        // Căn chỉnh nút xóa nằm bên phải
+        alignment: Alignment.centerRight,
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.delete_outline, color: Colors.white, size: 28),
+            SizedBox(width: 8),
+            Text('Xóa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+
+      // confirmDismiss: Sẽ chạy khi người dùng thả tay ra (kết thúc vuốt)
+      confirmDismiss: (direction) async {
+        // Gọi Popup xác nhận
+        final bool? shouldDelete = await _hienThiXacNhanXoaTraLoi(traLoi.id);
+
+        // Nếu người dùng bấm "Xóa" trong Popup
+        if (shouldDelete == true) {
+          _cauHoiService.xoaTraLoi(traLoi.id);
+          return true; // Cho phép Dismissible xóa cái Card này
+        }
+
+        // Nếu bấm "Hủy" -> Card sẽ tự động trôi về vị trí cũ
+        return false;
+      },
+
+      // Cái Card trắng hiển thị đè lên trên nút đỏ
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: content,
       ),
     );
+    // --- HẾT ---
   }
 
   Widget _buildAnswerInput() {
@@ -502,5 +546,101 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
   void dispose() {
     _traLoiController.dispose();
     super.dispose();
+  }
+
+  // Hàm hiển thị hộp thoại xác nhận xóa câu trả lời
+  // Hàm hiển thị hộp thoại xác nhận xóa (UI NÂNG CẤP)
+  Future<bool?> _hienThiXacNhanXoaTraLoi(String idTraLoi) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Bấm ra ngoài không tắt được, phải bấm nút
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 1. Icon cảnh báo màu đỏ lớn
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_forever_rounded,
+                  size: 32,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 2. Tiêu đề
+              const Text(
+                'Xác nhận xóa',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // 3. Nội dung
+              const Text(
+                'Bạn có chắc chắn muốn xóa câu trả lời này không?\nHành động này không thể hoàn tác.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 4. Hai nút hành động
+              Row(
+                children: [
+                  // Nút Hủy (Chiếm 1/2)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.border),
+                        foregroundColor: AppColors.textSecondary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text('Hủy', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Nút Xóa (Chiếm 1/2)
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('Xóa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
