@@ -90,4 +90,12 @@ class NguoiDungService {
     }
     return null;
   }
+  /// Lấy thông tin người dùng theo ID (Dùng cho Hỏi đáp)
+  Future<Map<String, dynamic>?> layThongTinNguoiDungById(String id) async {
+    final doc = await _firestore.collection('nguoi_dung').doc(id).get();
+    if (doc.exists) {
+      return doc.data();
+    }
+    return null;
+  }
 }

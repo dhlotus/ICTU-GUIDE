@@ -7,20 +7,18 @@ class CauHoiService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Lấy danh sách câu hỏi (theo thời gian mới nhất)
   Stream<List<CauHoi>> layDanhSachCauHoi() {
     return _firestore
         .collection('cau_hoi')
         .orderBy('ngayTao', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            return CauHoi.fromMap(doc.data(), doc.id);
-          }).toList();
-        });
+      return snapshot.docs.map((doc) {
+        return CauHoi.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
   }
 
-  /// Lấy chi tiết 1 câu hỏi theo ID
   Future<CauHoi?> layCauHoiTheoId(String id) async {
     final doc = await _firestore.collection('cau_hoi').doc(id).get();
     if (doc.exists) {
@@ -29,14 +27,12 @@ class CauHoiService {
     return null;
   }
 
-  /// Thêm câu hỏi mới
   Future<void> themCauHoi(String tieuDe, String noiDung) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
     final cauHoiMoi = {
       'nguoiDungId': user.uid,
-      'hoTenNguoiDung': user.displayName ?? 'Người dùng',
       'tieuDe': tieuDe,
       'noiDung': noiDung,
       'ngayTao': FieldValue.serverTimestamp(),
@@ -46,7 +42,6 @@ class CauHoiService {
     await _firestore.collection('cau_hoi').add(cauHoiMoi);
   }
 
-  /// Lấy danh sách câu trả lời cho 1 câu hỏi
   Stream<List<CauTraLoi>> layDanhSachTraLoi(String cauHoiId) {
     return _firestore
         .collection('cau_tra_loi')
@@ -54,13 +49,12 @@ class CauHoiService {
         .orderBy('ngayTao', descending: false)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            return CauTraLoi.fromMap(doc.data(), doc.id);
-          }).toList();
-        });
+      return snapshot.docs.map((doc) {
+        return CauTraLoi.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
   }
 
-  /// Thêm câu trả lời
   Future<void> themTraLoi(String cauHoiId, String noiDung) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
@@ -68,7 +62,6 @@ class CauHoiService {
     final traLoiMoi = {
       'cauHoiId': cauHoiId,
       'nguoiDungId': user.uid,
-      'hoTenNguoiDung': user.displayName ?? 'Người dùng',
       'noiDung': noiDung,
       'ngayTao': FieldValue.serverTimestamp(),
       'huuIch': false,
@@ -76,7 +69,7 @@ class CauHoiService {
 
     await _firestore.collection('cau_tra_loi').add(traLoiMoi);
   }
-  /// Xóa câu hỏi theo ID
+
   Future<void> xoaCauHoi(String id) async {
     await _firestore.collection('cau_hoi').doc(id).delete();
   }

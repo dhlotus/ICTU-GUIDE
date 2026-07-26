@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../config/app_colors.dart';
 import '../services/cau_hoi_service.dart';
+import '../services/nguoi_dung_service.dart';
 import '../models/cau_hoi.dart';
 import 'cau_hoi_detail_screen.dart';
 import 'them_cau_hoi_screen.dart';
 import 'dangnhap_screen.dart';
+import '../widgets/avatar_widget.dart';
 
-/// Màn hình danh sách câu hỏi - Kết nối Firestore
 class CauHoiListScreen extends StatefulWidget {
   const CauHoiListScreen({super.key});
 
@@ -17,6 +18,7 @@ class CauHoiListScreen extends StatefulWidget {
 
 class _CauHoiListScreenState extends State<CauHoiListScreen> {
   final CauHoiService _cauHoiService = CauHoiService();
+  final NguoiDungService _nguoiDungService = NguoiDungService();
   String _tuKhoaTimKiem = '';
   int _boLocDangChon = 0;
 
@@ -32,73 +34,65 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-        body: RefreshIndicator(
-          onRefresh: () async {
-            // Delay nhẹ để người dùng thấy hiệu ứng
-            await Future.delayed(const Duration(milliseconds: 500));
-          },
-          child: CustomScrollView(
-              slivers: [
-                _buildSliverHeader(),
-                _buildSliverSearchBar(),
-                _buildSliverBoLoc(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverHeader(),
+            _buildSliverSearchBar(),
+            _buildSliverBoLoc(),
 
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 20),
-                ),
-                  // Danh sách câu hỏi từ Firestore
-                  StreamBuilder<List<CauHoi>>(
-                    stream: _cauHoiService.layDanhSachCauHoi(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return SliverToBoxAdapter(
-                          child: Center(child: Text('Lỗi: ${snapshot.error}')),
-                        );
-                      }
+            StreamBuilder<List<CauHoi>>(
+              stream: _cauHoiService.layDanhSachCauHoi(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: Center(child: Text('Lỗi: ${snapshot.error}')),
+                  );
+                }
 
-                      if (!snapshot.hasData) {
-                        return const SliverFillRemaining(
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
+                if (!snapshot.hasData) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-                      var danhSach = snapshot.data!;
+                var danhSach = snapshot.data!;
 
-                      // Lọc theo từ khóa
-                      if (_tuKhoaTimKiem.isNotEmpty) {
-                        danhSach = danhSach.where((cauHoi) {
-                          return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
-                              cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
-                        }).toList();
-                      }
+                if (_tuKhoaTimKiem.isNotEmpty) {
+                  danhSach = danhSach.where((cauHoi) {
+                    return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
+                        cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                  }).toList();
+                }
 
-                      // Lọc theo bộ lọc (đơn giản)
-                      if (_boLocDangChon == 2) {
-                        danhSach = danhSach.where((c) => c.trangThai == 'dang_cho').toList();
-                      }
+                if (_boLocDangChon == 2) {
+                  danhSach = danhSach.where((c) => c.trangThai == 'dang_cho').toList();
+                }
 
-                      if (danhSach.isEmpty) {
-                        return const SliverFillRemaining(
-                          child: Center(child: Text('Không có câu hỏi nào')),
-                        );
-                      }
+                if (danhSach.isEmpty) {
+                  return const SliverFillRemaining(
+                    child: Center(child: Text('Không có câu hỏi nào')),
+                  );
+                }
 
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                            final cauHoi = danhSach[index];
-                            return _buildCauHoiCard(cauHoi);
-                          },
-                          childCount: danhSach.length,
-                        ),
-                      );
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final cauHoi = danhSach[index];
+                      return _buildCauHoiCard(cauHoi);
                     },
+                    childCount: danhSach.length,
                   ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
-            ],
-          ),
+                );
+              },
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
         ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (user == null) {
@@ -258,87 +252,75 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar + tên + thời gian
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        cauHoi.hoTenNguoiDung.isNotEmpty
-                            ? cauHoi.hoTenNguoiDung[0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+              // --- SỬA: Lấy Avatar & Tên từ Firestore ---
+              FutureBuilder<Map<String, dynamic>?>(
+                future: _nguoiDungService.layThongTinNguoiDungById(cauHoi.nguoiDungId),
+                builder: (context, snapshot) {
+                  String displayName = 'Người dùng';
+                  String? avatarId;
+
+                  if (snapshot.hasData && snapshot.data != null) {
+                    displayName = snapshot.data!['tenHienThi'] ?? 'Người dùng';
+                    avatarId = snapshot.data!['avatarId'];
+                  }
+
+                  return Row(
+                    children: [
+                      AvatarWidget(avatarId: avatarId, size: 36),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              _formatTime(cauHoi.ngayTao),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          cauHoi.hoTenNguoiDung,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      if (FirebaseAuth.instance.currentUser?.uid == cauHoi.nguoiDungId)
+                        GestureDetector(
+                          onTap: () {
+                            _hienThiXacNhanXoaCauHoi(cauHoi.id);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
                           ),
                         ),
-                        Text(
-                          _formatTime(cauHoi.ngayTao),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textTertiary,
+                      if (cauHoi.trangThai == 'da_giai_dap')
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Đã giải',
+                            style: TextStyle(fontSize: 10, color: AppColors.success),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // --- THÊM NÚT XÓA VÀO ĐÂY ---
-                  if (FirebaseAuth.instance.currentUser?.uid == cauHoi.nguoiDungId)
-                    GestureDetector(
-                      onTap: () {
-                        // Gọi hàm xóa ở Bước 3
-                        _hienThiXacNhanXoaCauHoi(cauHoi.id);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
-                      ),
-                    ),
-                  // --- HẾT PHẦN THÊM ---
-
-                  if (cauHoi.trangThai == 'da_giai_dap')
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Đã giải',
-                        style: TextStyle(fontSize: 10, color: AppColors.success),
-                      ),
-                    ),
-                ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 12),
 
-              // Tiêu đề
               Text(
                 cauHoi.tieuDe,
                 style: const TextStyle(
@@ -350,7 +332,6 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Nội dung tóm tắt
               Text(
                 cauHoi.noiDung,
                 style: TextStyle(
@@ -399,25 +380,17 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    // Trường hợp 1: Dưới 1 giờ (Hiện phút)
     if (diff.inHours < 1) {
       return '${diff.inMinutes} phút trước';
-    }
-    // Trường hợp 2: Dưới 24 giờ (Hiện giờ)
-    else if (diff.inDays < 1) {
+    } else if (diff.inDays < 1) {
       return '${diff.inHours} giờ trước';
-    }
-    // Trường hợp 3: Dưới 7 ngày (Hiện ngày)
-    else if (diff.inDays < 7) {
+    } else if (diff.inDays < 7) {
       return '${diff.inDays} ngày trước';
-    }
-    // Trường hợp 4: Hơn 7 ngày (Hiện ngày tháng năm)
-    else {
+    } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
   }
 
-  // Hàm hiện hộp thoại xác nhận xóa
   void _hienThiXacNhanXoaCauHoi(String idCauHoi) {
     showDialog(
       context: context,

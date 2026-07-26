@@ -4,7 +4,9 @@ import '../config/app_colors.dart';
 import '../models/cau_hoi.dart';
 import '../models/cau_tra_loi.dart';
 import '../services/cau_hoi_service.dart';
+import '../services/nguoi_dung_service.dart';
 import 'dangnhap_screen.dart';
+import '../widgets/avatar_widget.dart';
 
 class CauHoiDetailScreen extends StatefulWidget {
   final CauHoi cauHoi;
@@ -17,6 +19,7 @@ class CauHoiDetailScreen extends StatefulWidget {
 
 class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
   final CauHoiService _cauHoiService = CauHoiService();
+  final NguoiDungService _nguoiDungService = NguoiDungService();
   final TextEditingController _traLoiController = TextEditingController();
   bool _dangDangTraLoi = false;
 
@@ -47,12 +50,12 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
           ),
 
           SliverToBoxAdapter(child: _buildCauHoiSection()),
+
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 12), // Căn chỉnh padding khớp với giao diện
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
               child: Row(
                 children: [
-                  // Icon nhỏ bên trái
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -62,7 +65,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                     child: const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.primary),
                   ),
                   const SizedBox(width: 10),
-                  // Dòng chữ tiêu đề
                   const Text(
                     'Câu trả lời',
                     style: TextStyle(
@@ -72,7 +74,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Đường kẻ mảnh chạy dài sang phải cho đẹp
                   Expanded(
                     child: Container(
                       height: 1,
@@ -83,7 +84,7 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               ),
             ),
           ),
-          // --- BẮT ĐẦU SỬA: DÙNG STREAM TỪ FIRESTORE ---
+
           StreamBuilder<List<CauTraLoi>>(
             stream: _cauHoiService.layDanhSachTraLoi(widget.cauHoi.id),
             builder: (context, snapshot) {
@@ -116,7 +117,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                     padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 20),
                     child: Column(
                       children: [
-                        // 1. Hero Graphic: Icon lớn, nền gradient bừng sáng có bóng đổ mạnh
                         Container(
                           width: 100,
                           height: 100,
@@ -127,7 +127,7 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                               colors: [
                                 AppColors.primary,
                                 AppColors.accent,
-                                const Color(0xFF82B1FF), // Màu xanh sáng hơn
+                                const Color(0xFF82B1FF),
                               ],
                             ),
                             shape: BoxShape.circle,
@@ -135,51 +135,41 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
                               BoxShadow(
                                 color: AppColors.primary.withOpacity(0.5),
                                 blurRadius: 30,
-                                offset: const Offset(0, 15), // Bóng đổ sâu và lan rộng
+                                offset: const Offset(0, 15),
                               ),
                             ],
                           ),
-                          // Dùng icon ngôi sao hoặc bong bóng với nét vẽ dày
                           child: const Icon(
                             Icons.auto_awesome_rounded,
                             size: 50,
                             color: Colors.white,
                           ),
                         ),
-
                         const SizedBox(height: 40),
-
-                        // 2. Nổi bật Tiêu đề: Màu tối đậm, to rõ
                         const Text(
                           '✨ Chưa có câu trả lời nào!',
                           style: TextStyle(
-                            fontSize: 24, // To hơn
-                            fontWeight: FontWeight.w900, // Đậm hơn nữa
-                            color: Color(0xFF0F172A), // Màu than chì đậm nhất
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
                             letterSpacing: -0.5,
                           ),
                         ),
-
                         const SizedBox(height: 16),
-
-                        // 3. Mô tả phụ nhẹ nhàng hơn
                         const Text(
                           'Hãy là người tiên phong mang đến \ncâu trả lời chất lượng cho cộng đồng!',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
                             height: 1.6,
-                            color: Color(0xFF475569), // Màu xám đậm hơn chút để đọc rõ
+                            color: Color(0xFF475569),
                           ),
                         ),
-
                         const SizedBox(height: 40),
-
-                        // 4. Một cái "Tip nhỏ" (Lời khuyên) có nền màu vàng nhạt để nổi bật
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFFBE6), // Nền vàng nhạt
+                            color: const Color(0xFFFFFBE6),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: const Color(0xFFFFF0B3), width: 1),
                           ),
@@ -216,7 +206,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               );
             },
           ),
-          // --- HẾT SỬA ---
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
@@ -225,7 +214,6 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
     );
   }
 
-  // --- GIỮ NGUYÊN CÁC HÀM UI CŨ (CHỈ CẦN CHECK LẠI XEM CÓ ĐÚNG TÊN FILE KHÔNG) ---
   Widget _buildCauHoiSection() {
     return Container(
       margin: const EdgeInsets.all(20),
@@ -244,51 +232,51 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    widget.cauHoi.hoTenNguoiDung[0].toUpperCase(),
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+          // --- SỬA Ở ĐÂY: Lấy tên và Avatar từ NguoiDungService ---
+          FutureBuilder<Map<String, dynamic>?>(
+            future: _nguoiDungService.layThongTinNguoiDungById(widget.cauHoi.nguoiDungId),
+            builder: (context, snapshot) {
+              String displayName = 'Người dùng';
+              String? avatarId;
+
+              if (snapshot.hasData && snapshot.data != null) {
+                displayName = snapshot.data!['tenHienThi'] ?? 'Người dùng';
+                avatarId = snapshot.data!['avatarId'];
+              }
+
+              return Row(
+                children: [
+                  AvatarWidget(avatarId: avatarId, size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          _formatTime(widget.cauHoi.ngayTao),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.cauHoi.hoTenNguoiDung,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      _formatTime(widget.cauHoi.ngayTao),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
+          // --- HẾT PHẦN SỬA ---
+
           const SizedBox(height: 16),
+
           Text(
             widget.cauHoi.tieuDe,
             style: const TextStyle(
@@ -297,7 +285,9 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
               height: 1.3,
             ),
           ),
+
           const SizedBox(height: 12),
+
           Text(
             widget.cauHoi.noiDung,
             style: TextStyle(
@@ -329,51 +319,51 @@ class _CauHoiDetailScreenState extends State<CauHoiDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    traLoi.hoTenNguoiDung[0].toUpperCase(),
-                    style: TextStyle(
-                      color: AppColors.accentDark,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+          // --- SỬA Ở ĐÂY: Lấy tên và Avatar từ NguoiDungService ---
+          FutureBuilder<Map<String, dynamic>?>(
+            future: _nguoiDungService.layThongTinNguoiDungById(traLoi.nguoiDungId),
+            builder: (context, snapshot) {
+              String displayName = 'Người dùng';
+              String? avatarId;
+
+              if (snapshot.hasData && snapshot.data != null) {
+                displayName = snapshot.data!['tenHienThi'] ?? 'Người dùng';
+                avatarId = snapshot.data!['avatarId'];
+              }
+
+              return Row(
+                children: [
+                  AvatarWidget(avatarId: avatarId, size: 36),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          _formatTime(traLoi.ngayTao),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      traLoi.hoTenNguoiDung,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      _formatTime(traLoi.ngayTao),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
+          // --- HẾT PHẦN SỬA ---
+
           const SizedBox(height: 10),
+
           Text(
             traLoi.noiDung,
             style: TextStyle(

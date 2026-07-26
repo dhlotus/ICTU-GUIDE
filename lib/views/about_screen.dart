@@ -5,11 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  // Hàm mở link cải tiến
+  // Hàm mở link (Chuẩn cho web)
   Future<void> _openLink(String url) async {
     final Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri);
     } else {
       print('Không thể mở link: $url');
     }
@@ -45,7 +45,6 @@ class AboutScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // 1. THE HERO SECTION (App Branding)
-            // App Icon (Squircle shape với bóng đổ mềm mại)
             // Logo App
             Container(
               width: 100,
@@ -147,12 +146,12 @@ class AboutScreen extends StatelessWidget {
                         children: [
                           SizedBox(width: 32), // Căn thẳng hàng với icon bên trên
                           Text(
-                            'Họ tên',
+                            'Phát triển',
                             style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
                           ),
                           SizedBox(width: 12),
                           Text(
-                            'Bùi Đức Hà',
+                            'LOTUS',
                             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
                           ),
                         ],
@@ -322,7 +321,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
 
-                    // Mô tả mục đích
+                    // Mô tả mục đích (Chuẩn định dạng)
                     const Text(
                       'Hành trình đại học sẽ tuyệt vời hơn khi bạn có một trợ lý số đắc lực. '
                           'ICTU Guide ra đời với sứ mệnh giúp sinh viên ICTU tự tin làm chủ không gian học thuật, '
@@ -335,12 +334,6 @@ class AboutScreen extends StatelessWidget {
                         color: Color(0xFF475569),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
-                    // Mục Chính sách bảo mật (Tạo cảm giác chuyên nghiệp)
-                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                    const SizedBox(height: 8),
-
                   ],
                 ),
               ),
