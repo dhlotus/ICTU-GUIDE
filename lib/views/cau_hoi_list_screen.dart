@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../config/app_colors.dart';
 import '../services/cau_hoi_service.dart';
-import '../services/nguoi_dung_service.dart';
+import '../services/nguoi_dung_service.dart'; // Đã thêm import
 import '../models/cau_hoi.dart';
 import 'cau_hoi_detail_screen.dart';
 import 'them_cau_hoi_screen.dart';
 import 'dangnhap_screen.dart';
-import '../widgets/avatar_widget.dart';
+import '../widgets/avatar_widget.dart'; // Đã thêm import
 
 class CauHoiListScreen extends StatefulWidget {
   const CauHoiListScreen({super.key});
@@ -18,7 +18,7 @@ class CauHoiListScreen extends StatefulWidget {
 
 class _CauHoiListScreenState extends State<CauHoiListScreen> {
   final CauHoiService _cauHoiService = CauHoiService();
-  final NguoiDungService _nguoiDungService = NguoiDungService();
+  final NguoiDungService _nguoiDungService = NguoiDungService(); // Đã khai báo
   String _tuKhoaTimKiem = '';
   int _boLocDangChon = 0;
 
@@ -44,6 +44,9 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
             _buildSliverSearchBar(),
             _buildSliverBoLoc(),
 
+            SliverToBoxAdapter(
+              child: SizedBox(height: 20),
+            ),
             StreamBuilder<List<CauHoi>>(
               stream: _cauHoiService.layDanhSachCauHoi(),
               builder: (context, snapshot) {
@@ -252,7 +255,6 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- SỬA: Lấy Avatar & Tên từ Firestore ---
               FutureBuilder<Map<String, dynamic>?>(
                 future: _nguoiDungService.layThongTinNguoiDungById(cauHoi.nguoiDungId),
                 builder: (context, snapshot) {
@@ -327,18 +329,7 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-
-              Text(
-                cauHoi.noiDung,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 2,
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
