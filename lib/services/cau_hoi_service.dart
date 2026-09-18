@@ -94,4 +94,15 @@ class CauHoiService {
       }).toList();
     });
   }
+  /// Đếm số lượng câu trả lời cho một câu hỏi
+  Future<int> demSoCauTraLoi(String cauHoiId) async {
+    // Truy vấn collection 'cau_tra_loi' với điều kiện cauHoiId khớp
+    final snapshot = await _firestore
+        .collection('cau_tra_loi')
+        .where('cauHoiId', isEqualTo: cauHoiId)
+        .get();
+
+    // Trả về tổng số document tìm được
+    return snapshot.docs.length;
+  }
 }

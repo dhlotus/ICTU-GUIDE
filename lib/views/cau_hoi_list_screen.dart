@@ -18,7 +18,7 @@ class CauHoiListScreen extends StatefulWidget {
 
 class _CauHoiListScreenState extends State<CauHoiListScreen> {
   final CauHoiService _cauHoiService = CauHoiService();
-  final NguoiDungService _nguoiDungService = NguoiDungService(); // Đã khai báo
+  final NguoiDungService _nguoiDungService = NguoiDungService();
   String _tuKhoaTimKiem = '';
   int _boLocDangChon = 0;
 
@@ -44,54 +44,143 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
             _buildSliverSearchBar(),
             _buildSliverBoLoc(),
 
+            // --- BẮT ĐẦU: ANIMATED SWITCHER CHO HIỆU ỨNG CHUYỂN ĐỔI ---
             SliverToBoxAdapter(
-              child: SizedBox(height: 20),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.05),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOut,
+                      )),
+                      child: child,
+                    ),
+                  );
+                },
+                child: StreamBuilder<List<CauHoi>>(
+                  key: ValueKey(_boLocDangChon), // Key thay đổi khi bộ lọc đổi
+                  stream: _cauHoiService.layDanhSachCauHoi(),
+                  builder: (context, snapshot) {
+                    // 1. Xử lý lỗi
+                    if (snapshot.hasError) {
+                      return SizedBox(
+                        height: 300,
+                        child: Center(child: Text('Lỗi: ${snapshot.error}')),
+                      );
+                    }
+
+                    // 2. Đang tải dữ liệu
+                    if (!snapshot.hasData) {
+                      return const SizedBox(
+                        height: 300,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    var danhSach = snapshot.data!;
+
+                    // 3. Lọc theo từ khóa
+                    if (_tuKhoaTimKiem.isNotEmpty) {
+                      danhSach = danhSach.where((cauHoi) {
+                        return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
+                            cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
+                      }).toList();
+                    }
+
+                    // 4. Lọc "Phổ biến" và "Chưa giải đáp" (dùng FutureBuilder để đếm số trả lời)
+                    if (_boLocDangChon == 1 || _boLocDangChon == 2) {
+                      return FutureBuilder<List<Map<String, dynamic>>>(
+                        future: _demSoCauTraLoiChoDanhSach(danhSach),
+                        builder: (context, snapshotDem) {
+                          if (!snapshotDem.hasData) {
+                            return const SizedBox(
+                              height: 300,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+
+                          final danhSachVoiSoTraLoi = snapshotDem.data!;
+
+                          if (_boLocDangChon == 1) {
+                            // Phổ biến
+                            danhSachVoiSoTraLoi.sort((a, b) =>
+                                (b['soCauTraLoi'] as int).compareTo(a['soCauTraLoi'] as int));
+
+                            if (danhSachVoiSoTraLoi.isEmpty) {
+                              return const SizedBox(
+                                height: 300,
+                                child: Center(child: Text('Không có câu hỏi nào')),
+                              );
+                            }
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.zero,
+                              itemCount: danhSachVoiSoTraLoi.length,
+                              itemBuilder: (context, index) {
+                                final cauHoi = danhSachVoiSoTraLoi[index]['cauHoi'] as CauHoi;
+                                return _buildCauHoiCard(cauHoi);
+                              },
+                            );
+                          } else {
+                            // Chưa giải đáp
+                            final locChuaGiaiDap = danhSachVoiSoTraLoi
+                                .where((item) => (item['soCauTraLoi'] as int) == 0)
+                                .toList();
+
+                            if (locChuaGiaiDap.isEmpty) {
+                              return const SizedBox(
+                                height: 300,
+                                child: Center(child: Text('Tất cả câu hỏi đã được giải đáp!')),
+                              );
+                            }
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: EdgeInsets.zero,
+                              itemCount: locChuaGiaiDap.length,
+                              itemBuilder: (context, index) {
+                                final cauHoi = locChuaGiaiDap[index]['cauHoi'] as CauHoi;
+                                return _buildCauHoiCard(cauHoi);
+                              },
+                            );
+                          }
+                        },
+                      );
+                    }
+
+                    // 5. Mặc định: "Mới nhất"
+                    if (danhSach.isEmpty) {
+                      return const SizedBox(
+                        height: 300,
+                        child: Center(child: Text('Không có câu hỏi nào')),
+                      );
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: danhSach.length,
+                      itemBuilder: (context, index) {
+                        final cauHoi = danhSach[index];
+                        return _buildCauHoiCard(cauHoi);
+                      },
+                    );
+                  },
+                ),
+              ),
             ),
-            StreamBuilder<List<CauHoi>>(
-              stream: _cauHoiService.layDanhSachCauHoi(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return SliverToBoxAdapter(
-                    child: Center(child: Text('Lỗi: ${snapshot.error}')),
-                  );
-                }
+            // --- HẾT PHẦN ANIMATED SWITCHER ---
 
-                if (!snapshot.hasData) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                var danhSach = snapshot.data!;
-
-                if (_tuKhoaTimKiem.isNotEmpty) {
-                  danhSach = danhSach.where((cauHoi) {
-                    return cauHoi.tieuDe.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase()) ||
-                        cauHoi.noiDung.toLowerCase().contains(_tuKhoaTimKiem.toLowerCase());
-                  }).toList();
-                }
-
-                if (_boLocDangChon == 2) {
-                  danhSach = danhSach.where((c) => c.trangThai == 'dang_cho').toList();
-                }
-
-                if (danhSach.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text('Không có câu hỏi nào')),
-                  );
-                }
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final cauHoi = danhSach[index];
-                      return _buildCauHoiCard(cauHoi);
-                    },
-                    childCount: danhSach.length,
-                  ),
-                );
-              },
-            ),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
@@ -408,5 +497,20 @@ class _CauHoiListScreenState extends State<CauHoiListScreen> {
         ],
       ),
     );
+  }
+
+  // Hàm hỗ trợ: Đếm số câu trả lời cho một danh sách câu hỏi
+  Future<List<Map<String, dynamic>>> _demSoCauTraLoiChoDanhSach(List<CauHoi> danhSach) async {
+    List<Map<String, dynamic>> ketQua = [];
+
+    for (var cauHoi in danhSach) {
+      int soCauTraLoi = await _cauHoiService.demSoCauTraLoi(cauHoi.id);
+      ketQua.add({
+        'cauHoi': cauHoi,
+        'soCauTraLoi': soCauTraLoi,
+      });
+    }
+
+    return ketQua;
   }
 }
