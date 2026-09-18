@@ -78,4 +78,20 @@ class CauHoiService {
   Future<void> xoaTraLoi(String id) async {
     await _firestore.collection('cau_tra_loi').doc(id).delete();
   }
+  /// Lấy danh sách câu hỏi của riêng user đang đăng nhập
+  Stream<List<CauHoi>> layDanhSachCauHoiCuaToi() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+
+    return _firestore
+        .collection('cau_hoi')
+        .where('nguoiDungId', isEqualTo: user.uid)
+        .orderBy('ngayTao', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return CauHoi.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
+  }
 }

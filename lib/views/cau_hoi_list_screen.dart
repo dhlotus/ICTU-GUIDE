@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../config/app_colors.dart';
 import '../services/cau_hoi_service.dart';
-import '../services/nguoi_dung_service.dart'; // Đã thêm import
+import '../services/nguoi_dung_service.dart';
 import '../models/cau_hoi.dart';
 import 'cau_hoi_detail_screen.dart';
 import 'them_cau_hoi_screen.dart';
 import 'dangnhap_screen.dart';
-import '../widgets/avatar_widget.dart'; // Đã thêm import
+import '../widgets/avatar_widget.dart';
 
 class CauHoiListScreen extends StatefulWidget {
   const CauHoiListScreen({super.key});

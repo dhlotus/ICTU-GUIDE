@@ -10,6 +10,7 @@ import 'lich_hoc_screen.dart';
 import 'home_screen.dart';
 import '../models/avatar_mau.dart';
 import '../widgets/avatar_widget.dart';
+import '../views/cau_hoi_cua_toi_screen.dart';
 
 /// Màn hình Cá nhân - Có thể chỉnh sửa thông tin
 class ProfileScreen extends StatefulWidget {
@@ -623,7 +624,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.question_answer,
             title: 'Câu hỏi của tôi',
             onTap: () {
-              _thongBaoPhatTrien();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CauHoiCuaToiScreen()),
+              );
             },
           ),
           _buildDivider(),
