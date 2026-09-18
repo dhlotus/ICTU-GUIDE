@@ -218,13 +218,163 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
     );
   }
 
+  // Hàm hiển thị Popup chi tiết bài viết (Hiệu ứng Zoom ở giữa màn hình)
+  void _hienThiPopupChiTiet(CamNang baiViet) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true, // Cho phép ấn ra ngoài để đóng
+      barrierLabel: 'Đóng',
+      barrierColor: Colors.black.withOpacity(0.5), // Nền tối mờ 50%
+      transitionDuration: const Duration(milliseconds: 300), // Thời gian chạy hiệu ứng
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return const SizedBox.shrink(); // Không dùng pageBuilder, chỉ dùng transitionBuilder
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        // Hiệu ứng Zoom: Từ 0.8 -> 1.0 (phóng to dần) khi hiện
+        // và 1.0 -> 0.8 khi ẩn
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack, // Hiệu ứng hơi nảy nhẹ khi xuất hiện
+        );
+
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.8, end: 1.0).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: animation, // Mờ dần khi xuất hiện
+            child: Dialog(
+              // Cấu hình hộp thoại
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20), // Cách 2 bên 20px
+              child: Container(
+                constraints: BoxConstraints(
+                  // Chiều cao tối đa 80% màn hình, tự co giãn theo nội dung
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Chiều cao co giãn theo nội dung
+                    children: [
+                      // 1. Header Row: Chip "Cẩm nang" bên trái, nút X bên phải
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.menu_book_rounded, size: 16, color: Color(0xFF0284C7)),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Cẩm nang',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF8FAFC),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, size: 20, color: Color(0xFF64748B)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 2. Tiêu đề
+                      Text(
+                        _capitalizeTitle(baiViet.tieuDe),
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                          height: 1.25,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 3. Meta Data
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, size: 15, color: Color(0xFF94A3B8)),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatDate(baiViet.ngayTao),
+                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(width: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF7ED),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 13, color: Color(0xFFEA580C)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_thoiGianDoc(baiViet.noiDung)} phút đọc',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEA580C)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      const SizedBox(height: 20),
+
+                      // 4. Nội dung
+                      Text(
+                        baiViet.noiDung,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.65,
+                          color: Color(0xFF334155),
+                          wordSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
   Widget _buildBaiVietCard(CamNang baiViet) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CamNangDetailScreen(baiViet: baiViet)),
-        );
+        _hienThiPopupChiTiet(baiViet);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -239,10 +389,7 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CamNangDetailScreen(baiViet: baiViet)),
-                );
+                _hienThiPopupChiTiet(baiViet);
               },
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -337,5 +484,25 @@ class _CamNangListScreenState extends State<CamNangListScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+  // Hàm ước tính thời gian đọc dựa trên số từ trong nội dung
+  int _thoiGianDoc(String noiDung) {
+    // Đếm số từ bằng cách tách chuỗi theo khoảng trắng
+    final soTu = noiDung.split(' ').length;
+    // Ước tính 200 từ/phút, làm tròn lên
+    final phutDoc = (soTu / 200).ceil();
+    // Đảm bảo tối thiểu là 1 phút
+    return phutDoc > 0 ? phutDoc : 1;
+  }
+  // Hàm viết hoa chữ cái đầu mỗi từ trong tiêu đề
+  String _capitalizeTitle(String input) {
+    if (input.isEmpty) return input;
+    List<String> words = input.split(' ');
+    for (int i = 0; i < words.length; i++) {
+      if (words[i].isNotEmpty) {
+        words[i] = words[i][0].toUpperCase() + words[i].substring(1);
+      }
+    }
+    return words.join(' ');
   }
 }
